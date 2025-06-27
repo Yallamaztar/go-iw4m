@@ -1,7 +1,6 @@
 package services
 
 import (
-	"github.com/Yallamaztar/go-iw4m/services"
 	"github.com/Yallamaztar/go-iw4m/wrapper"
 )
 
@@ -13,6 +12,6 @@ func NewUtils(w *wrapper.IW4MWrapper) *Utils {
 	return &Utils{Wrapper: w}
 }
 
-func DoesRoleExists(role string) bool {
-	server = services.NewServer()
-}
+// func DoesRoleExists(role string) bool {
+// 	// server := NewServer()
+// }

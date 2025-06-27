@@ -37,16 +37,8 @@ func (s *Server) Info() string {
 	return s.Wrapper.DoRequest(fmt.Sprintf("%s/api/info", s.Wrapper.BaseURL))
 }
 
-type CommandHelp struct {
-	Alias          string
-	Description    string
-	RequiresTarget string
-	Syntax         string
-	MinLevel       string
-}
-
-func (s *Server) Help() (map[string]map[string]CommandHelp, error) {
-	help := make(map[string]map[string]CommandHelp)
+func (s *Server) Help() (Help, error) {
+	help := make(Help)
 
 	r := s.Wrapper.DoRequest(fmt.Sprintf("%s/Home/Help", s.Wrapper.BaseURL))
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(r))
@@ -60,7 +52,7 @@ func (s *Server) Help() (map[string]map[string]CommandHelp, error) {
 			return
 		}
 		if _, exists := help[title]; !exists {
-			help[title] = make(map[string]CommandHelp)
+			help[title] = HelpCategory{Commands: make(map[string]CommandHelp)}
 		}
 
 		container.Find("tr.d-none.d-lg-table-row.bg-dark-dm.bg-light-lm").Each(func(_ int, tr *goquery.Selection) {
@@ -75,7 +67,7 @@ func (s *Server) Help() (map[string]map[string]CommandHelp, error) {
 			syntax := strings.TrimSpace(tds.Eq(4).Text())
 			minLevel := strings.TrimSpace(tr.Find("td.text-right").Text())
 
-			help[title][name] = CommandHelp{
+			help[title].Commands[name] = CommandHelp{
 				Alias:          alias,
 				Description:    description,
 				RequiresTarget: requiresTarget,
@@ -187,4 +179,54 @@ func (s *Server) Rules() []string {
 		}
 	})
 	return rules
+}
+
+func (s *Server) GetReports() ([]Report, error) {
+	r := s.Wrapper.DoRequest(fmt.Sprintf("%s/Action/RecentReportsForm/", s.Wrapper.BaseURL))
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(r))
+	if err != nil {
+		return nil, err
+	}
+
+	var reports []Report
+
+	// Get timestamps from the report blocks
+	timestamps := []string{}
+	doc.Find("div.rounded.bg-very-dark-dm.bg-light-ex-lm.mt-10.mb-10.p-10").Each(func(i int, block *goquery.Selection) {
+		timestamp := strings.TrimSpace(block.Find("div.font-weight-bold").Text())
+		timestamps = append(timestamps, timestamp)
+	})
+
+	i := 0
+	doc.Find("div.font-size-12").Each(
+		func(_ int, entry *goquery.Selection) {
+			origin := strings.TrimSpace(entry.Find("a").Text())
+
+			reasonTag := entry.Find("span.text-white-dm.text-black-lm colorcode")
+			reason := ""
+			if reasonTag.Length() > 0 {
+				reason = strings.TrimSpace(reasonTag.Text())
+			}
+
+			targetTag := entry.Find("span.text-highlight a")
+			target := ""
+			if targetTag.Length() > 0 {
+				target = strings.TrimSpace(targetTag.Text())
+			}
+
+			timestamp := ""
+			if i < len(timestamps) {
+				timestamp = timestamps[i]
+			}
+
+			reports = append(reports, Report{
+				Origin:    origin,
+				Reason:    reason,
+				Target:    target,
+				Timestamp: timestamp,
+			})
+			i++
+		})
+
+	return reports, nil
 }
