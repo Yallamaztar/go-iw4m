@@ -1,4 +1,4 @@
-package iw4m
+package models
 
 type CommandHelp struct {
 	Alias          string `json:"alias"`
@@ -12,9 +12,9 @@ type HelpCategory struct {
 	Commands map[string]CommandHelp `json:"commands"`
 }
 
-type HelpModel map[string]HelpCategory
+type Help map[string]HelpCategory
 
-type ReportModel struct {
+type Report struct {
 	Origin    string
 	Reason    string
 	Target    string
@@ -26,19 +26,19 @@ type ServerID struct {
 	ID     string
 }
 
-type ChatModel struct {
+type Chat struct {
 	Origin  string
 	Message string
 }
 
-type PlayerModel struct {
+type Player struct {
 	Role string
 	Name string
 	XUID string
 	URL  string
 }
 
-type RecentClientModel struct {
+type RecentClient struct {
 	Name      string `json:"name"`
 	Link      string `json:"link"`
 	Country   string `json:"country,omitempty"`
@@ -46,7 +46,7 @@ type RecentClientModel struct {
 	LastSeen  string `json:"last_seen"`
 }
 
-type AuditLogModel struct {
+type AuditLog struct {
 	Type   string
 	Origin string
 	Href   string
@@ -55,14 +55,14 @@ type AuditLogModel struct {
 	Time   string
 }
 
-type AdminModel struct {
+type Admin struct {
 	Name          string
 	Role          string
 	Game          string
 	LastConnected string
 }
 
-type TopPlayerModel struct {
+type TopPlayer struct {
 	Rank   string            `json:"rank"`
 	Name   string            `json:"name"`
 	Link   string            `json:"link"`
@@ -70,7 +70,7 @@ type TopPlayerModel struct {
 	Stats  map[string]string `json:"stats"`
 }
 
-type AdvancedStatsModel struct {
+type AdvancedStats struct {
 	Name         string                   `json:"name"`
 	Link         string                   `json:"link"`
 	IconURL      string                   `json:"icon_url"`

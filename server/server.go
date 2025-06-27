@@ -1,4 +1,4 @@
-package iw4m
+package server
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/Yallamaztar/go-iw4m/models"
 	"github.com/Yallamaztar/go-iw4m/wrapper"
 )
 
@@ -38,8 +39,8 @@ func (s *Server) Info() string {
 	return s.Wrapper.DoRequest(fmt.Sprintf("%s/api/info", s.Wrapper.BaseURL))
 }
 
-func (s *Server) Help() (HelpModel, error) {
-	help := make(HelpModel)
+func (s *Server) Help() (models.Help, error) {
+	help := make(models.Help)
 
 	r := s.Wrapper.DoRequest(fmt.Sprintf("%s/Home/Help", s.Wrapper.BaseURL))
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(r))
@@ -53,7 +54,7 @@ func (s *Server) Help() (HelpModel, error) {
 			return
 		}
 		if _, exists := help[title]; !exists {
-			help[title] = HelpCategory{Commands: make(map[string]CommandHelp)}
+			help[title] = models.HelpCategory{Commands: make(map[string]models.CommandHelp)}
 		}
 
 		container.Find("tr.d-none.d-lg-table-row.bg-dark-dm.bg-light-lm").Each(func(_ int, tr *goquery.Selection) {
@@ -68,7 +69,7 @@ func (s *Server) Help() (HelpModel, error) {
 			syntax := strings.TrimSpace(tds.Eq(4).Text())
 			minLevel := strings.TrimSpace(tr.Find("td.text-right").Text())
 
-			help[title].Commands[name] = CommandHelp{
+			help[title].Commands[name] = models.CommandHelp{
 				Alias:          alias,
 				Description:    description,
 				RequiresTarget: requiresTarget,
@@ -182,14 +183,14 @@ func (s *Server) Rules() []string {
 	return rules
 }
 
-func (s *Server) Reports() ([]ReportModel, error) {
+func (s *Server) Reports() ([]models.Report, error) {
 	r := s.Wrapper.DoRequest(fmt.Sprintf("%s/Action/RecentReportsForm/", s.Wrapper.BaseURL))
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(r))
 	if err != nil {
 		return nil, err
 	}
 
-	var reports []ReportModel
+	var reports []models.Report
 	timestamps := []string{}
 
 	doc.Find("div.rounded.bg-very-dark-dm.bg-light-ex-lm.mt-10.mb-10.p-10").Each(func(i int, block *goquery.Selection) {
@@ -219,7 +220,7 @@ func (s *Server) Reports() ([]ReportModel, error) {
 				timestamp = timestamps[i]
 			}
 
-			reports = append(reports, ReportModel{
+			reports = append(reports, models.Report{
 				Origin:    origin,
 				Reason:    reason,
 				Target:    target,
@@ -231,7 +232,7 @@ func (s *Server) Reports() ([]ReportModel, error) {
 	return reports, nil
 }
 
-func (s *Server) ServerIDs() ([]ServerID, error) {
+func (s *Server) ServerIDs() ([]models.ServerID, error) {
 	html := s.Wrapper.DoRequest(fmt.Sprintf("%s/Console", s.Wrapper.BaseURL))
 
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
@@ -239,13 +240,13 @@ func (s *Server) ServerIDs() ([]ServerID, error) {
 		return nil, err
 	}
 
-	var serverIDs []ServerID
+	var serverIDs []models.ServerID
 	doc.Find("select#console_server_select option").Each(
 		func(i int, s *goquery.Selection) {
 			name := strings.TrimSpace(s.Text())
 			id, exists := s.Attr("value")
 			if exists {
-				serverIDs = append(serverIDs, ServerID{
+				serverIDs = append(serverIDs, models.ServerID{
 					Server: name, ID: id,
 				})
 			}
@@ -263,7 +264,7 @@ func (s *Server) SendCommand(command string) string {
 	return r
 }
 
-func (s *Server) ReadChat() ([]ChatModel, error) {
+func (s *Server) ReadChat() ([]models.Chat, error) {
 	html := s.Wrapper.DoRequest(s.Wrapper.BaseURL)
 
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
@@ -271,7 +272,7 @@ func (s *Server) ReadChat() ([]ChatModel, error) {
 		return nil, err
 	}
 
-	var chat []ChatModel
+	var chat []models.Chat
 	doc.Find("div.text-truncate").Each(
 		func(i int, s *goquery.Selection) {
 			var origin string
@@ -290,7 +291,7 @@ func (s *Server) ReadChat() ([]ChatModel, error) {
 			}
 
 			if origin != "" && message != "" {
-				chat = append(chat, ChatModel{Origin: origin, Message: message})
+				chat = append(chat, models.Chat{Origin: origin, Message: message})
 			}
 		})
 
@@ -314,8 +315,8 @@ func (s *Server) FindPlayer(name, xuid string, count, offset, direction int) (st
 	return r, nil
 }
 
-func (s *Server) GetPlayers() ([]PlayerModel, error) {
-	var players []PlayerModel
+func (s *Server) GetPlayers() ([]models.Player, error) {
+	var players []models.Player
 
 	r := s.Wrapper.DoRequest(fmt.Sprintf("%s/", s.Wrapper.BaseURL))
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(r))
@@ -343,7 +344,7 @@ func (s *Server) GetPlayers() ([]PlayerModel, error) {
 					href, exists := s.Attr("href")
 					if exists && len(href) >= 17 {
 						xuid := href[16:]
-						players = append(players, PlayerModel{
+						players = append(players, models.Player{
 							Role: role,
 							Name: name,
 							XUID: xuid,
@@ -403,8 +404,8 @@ func (s *Server) GetRoles() ([]string, error) {
 	return roles, nil
 }
 
-func (s *Server) RecentClients(offset int) ([]RecentClientModel, error) {
-	var recentClients []RecentClientModel
+func (s *Server) RecentClients(offset int) ([]models.RecentClient, error) {
+	var recentClients []models.RecentClient
 
 	r := s.Wrapper.DoRequest(fmt.Sprintf("%s/Action/RecentClientsForm?offset=%d&count=20", s.Wrapper.BaseURL, offset))
 
@@ -414,7 +415,7 @@ func (s *Server) RecentClients(offset int) ([]RecentClientModel, error) {
 	}
 
 	doc.Find("div.bg-very-dark-dm.bg-light-ex-lm.p-15.rounded.mb-10").Each(func(i int, entry *goquery.Selection) {
-		var client RecentClientModel
+		var client models.RecentClient
 
 		user := entry.Find("div.d-flex.flex-row").First()
 		if user.Length() > 0 {
@@ -445,7 +446,7 @@ func (s *Server) RecentClients(offset int) ([]RecentClientModel, error) {
 	return recentClients, nil
 }
 
-func (s *Server) RecentAuditLog() (*AuditLogModel, error) {
+func (s *Server) RecentAuditLog() (*models.AuditLog, error) {
 	r := s.Wrapper.DoRequest(fmt.Sprintf("%s/Admin/AuditLog", s.Wrapper.BaseURL))
 
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(r))
@@ -477,7 +478,7 @@ func (s *Server) RecentAuditLog() (*AuditLogModel, error) {
 		target = columns.Eq(2).Text()
 	}
 
-	return &AuditLogModel{
+	return &models.AuditLog{
 		Type:   strings.TrimSpace(columns.Eq(0).Text()),
 		Origin: strings.TrimSpace(originName),
 		Href:   strings.TrimSpace(href),
@@ -487,8 +488,8 @@ func (s *Server) RecentAuditLog() (*AuditLogModel, error) {
 	}, nil
 }
 
-func (s *Server) AuditLogs(count int) ([]AuditLogModel, error) {
-	var auditLogs []AuditLogModel
+func (s *Server) AuditLogs(count int) ([]models.AuditLog, error) {
+	var auditLogs []models.AuditLog
 
 	r := s.Wrapper.DoRequest(fmt.Sprintf("%s/Admin/AuditLog", s.Wrapper.BaseURL))
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(r))
@@ -526,7 +527,7 @@ func (s *Server) AuditLogs(count int) ([]AuditLogModel, error) {
 				target = columns.Eq(2).Text()
 			}
 
-			auditLogs = append(auditLogs, AuditLogModel{
+			auditLogs = append(auditLogs, models.AuditLog{
 				Type:   strings.TrimSpace(columns.Eq(0).Text()),
 				Origin: strings.TrimSpace(originName),
 				Href:   strings.TrimSpace(href),
@@ -541,12 +542,12 @@ func (s *Server) AuditLogs(count int) ([]AuditLogModel, error) {
 	return auditLogs, nil
 }
 
-func (s *Server) Admins(role string, count int) ([]AdminModel, error) {
+func (s *Server) Admins(role string, count int) ([]models.Admin, error) {
 	if role == "" {
 		role = "all"
 	}
 
-	var admins []AdminModel
+	var admins []models.Admin
 
 	r := s.Wrapper.DoRequest(fmt.Sprintf("%s/Client/Privileged", s.Wrapper.BaseURL))
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(r))
@@ -588,7 +589,7 @@ func (s *Server) Admins(role string, count int) ([]AdminModel, error) {
 							lastConnected = strings.TrimSpace(tds.Eq(tds.Length() - 1).Text())
 						}
 
-						admins = append(admins, AdminModel{
+						admins = append(admins, models.Admin{
 							Name:          name,
 							Role:          role,
 							Game:          game,
@@ -610,8 +611,8 @@ func (s *Server) Admins(role string, count int) ([]AdminModel, error) {
 	return admins, nil
 }
 
-func (s *Server) TopPlayers(count int) ([]TopPlayerModel, error) {
-	var topPlayers []TopPlayerModel
+func (s *Server) TopPlayers(count int) ([]models.TopPlayer, error) {
+	var topPlayers []models.TopPlayer
 
 	r := s.Wrapper.DoRequest(fmt.Sprintf("%s/Stats/GetTopPlayersAsync?offset=0&count=%d&serverId=0", s.Wrapper.BaseURL, count))
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(r))
@@ -639,7 +640,7 @@ func (s *Server) TopPlayers(count int) ([]TopPlayerModel, error) {
 			}
 		})
 
-		topPlayers = append(topPlayers, TopPlayerModel{
+		topPlayers = append(topPlayers, models.TopPlayer{
 			Rank:   "#" + rank,
 			Name:   name,
 			Link:   link,

@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Yallamaztar/go-iw4m/iw4m"
 	"github.com/Yallamaztar/go-iw4m/wrapper"
 )
 

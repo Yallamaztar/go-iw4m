@@ -1,4 +1,4 @@
-package iw4m
+package utils
 
 import (
 	"github.com/Yallamaztar/go-iw4m/wrapper"

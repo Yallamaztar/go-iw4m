@@ -1,4 +1,4 @@
-package iw4m
+package player
 
 import (
 	"encoding/json"
@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/Yallamaztar/go-iw4m/models"
 	"github.com/Yallamaztar/go-iw4m/wrapper"
 )
 
@@ -28,7 +29,7 @@ func (p *Player) PlayerStats(clientID string) (string, error) {
 	return r, nil
 }
 
-func (p *Player) AdvancedStats(clientID string) (*AdvancedStatsModel, error) {
+func (p *Player) AdvancedStats(clientID string) (*models.AdvancedStats, error) {
 	r := p.Wrapper.DoRequest(fmt.Sprintf("%s/clientstatistics/%s/advanced", p.Wrapper.BaseURL, clientID))
 
 	if r == "" {
@@ -40,9 +41,9 @@ func (p *Player) AdvancedStats(clientID string) (*AdvancedStatsModel, error) {
 		return nil, err
 	}
 
-	model := &AdvancedStatsModel{
-		HitLocations: make(map[string][]HitLocation),
-		WeaponUsages: make(map[string][]WeaponUsage),
+	model := &models.AdvancedStats{
+		HitLocations: make(map[string][]models.HitLocation),
+		WeaponUsages: make(map[string][]models.WeaponUsage),
 	}
 	topCard := doc.Find("div.align-self-center.d-flex.flex-column.flex-lg-row.flex-fill.mb-15")
 	if topCard.Length() > 0 {
@@ -62,7 +63,7 @@ func (p *Player) AdvancedStats(clientID string) (*AdvancedStatsModel, error) {
 		key := strings.TrimSpace(stat.Find("div.font-size-12.text-muted").Text())
 		value := strings.TrimSpace(stat.Find("div.m-0.font-size-16.text-primary").Text())
 		if key != "" && value != "" {
-			model.PlayerStats = append(model.PlayerStats, StatEntry{Key: key, Value: value})
+			model.PlayerStats = append(model.PlayerStats, models.StatEntry{Key: key, Value: value})
 		}
 	})
 
@@ -70,12 +71,12 @@ func (p *Player) AdvancedStats(clientID string) (*AdvancedStatsModel, error) {
 
 	bottom.Find("div.mr-0.mr-xl-20.flex-fill.flex-xl-grow-1").Each(func(i int, hit *goquery.Selection) {
 		title := strings.TrimSpace(hit.Find("h4.colorcode").Text())
-		var entries []HitLocation
+		var entries []models.HitLocation
 
 		hit.Find("tbody tr.bg-dark-dm.bg-light-lm.d-none.d-lg-table-row").Each(func(j int, row *goquery.Selection) {
 			spans := row.Find("span")
 			if spans.Length() >= 4 {
-				entries = append(entries, HitLocation{
+				entries = append(entries, models.HitLocation{
 					Location:   strings.TrimSpace(spans.Eq(0).Text()),
 					Hits:       strings.TrimSpace(spans.Eq(1).Text()),
 					Percentage: strings.TrimSpace(spans.Eq(2).Text()),
@@ -90,13 +91,13 @@ func (p *Player) AdvancedStats(clientID string) (*AdvancedStatsModel, error) {
 
 	bottom.Find("div.flex-fill.flex-xl-grow-1").Each(func(i int, usage *goquery.Selection) {
 		title := strings.TrimSpace(usage.Find("h4.colorcode").Text())
-		var weapons []WeaponUsage
+		var weapons []models.WeaponUsage
 
 		usage.Find("tbody tr.bg-dark-dm.bg-light-lm.d-none.d-lg-table-row").Each(
 			func(j int, row *goquery.Selection) {
 				spans := row.Find("span")
 				if spans.Length() >= 6 {
-					weapons = append(weapons, WeaponUsage{
+					weapons = append(weapons, models.WeaponUsage{
 						Weapon:              strings.TrimSpace(spans.Eq(0).Text()),
 						FavoriteAttachments: strings.TrimSpace(spans.Eq(1).Text()),
 						Kills:               strings.TrimSpace(spans.Eq(2).Text()),
