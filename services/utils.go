@@ -12,6 +12,8 @@ func NewUtils(w *wrapper.IW4MWrapper) *Utils {
 	return &Utils{Wrapper: w}
 }
 
-// func DoesRoleExists(role string) bool {
-// 	// server := NewServer()
+// func (u *Utils) DoesRoleExists(role string) string {
+// 	server := NewServer(u.Wrapper)
 // }
+
+// func (u *Utils) RolePosition(role string)

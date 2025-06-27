@@ -7,7 +7,7 @@ import (
 
 type IW4MWrapper struct {
 	BaseURL  string
-	ServerID int
+	ServerID string
 	Cookie   string
 	Client   *http.Client
 }
