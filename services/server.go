@@ -7,13 +7,15 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/Yallamaztar/go-iw4m/wrapper"
 )
 
 type Server struct {
-	Wrapper *IW4MWrapper
+	Wrapper *wrapper.IW4MWrapper
 }
 
-func (w *IW4MWrapper) Server() *Server {
+// Constructor to create Server from IW4MWrapper instance
+func NewServer(w *wrapper.IW4MWrapper) *Server {
 	return &Server{Wrapper: w}
 }
 
@@ -94,8 +96,8 @@ func (s *Server) MapName() (string, error) {
 	}
 
 	var mapName string
-	doc.Find("div.col-12.align-self-center.text-center.text-lg-left.col-lg-4").Each(func(i int, s *goquery.Selection) {
-		spans := s.Find("span")
+	doc.Find("div.col-12.align-self-center.text-center.text-lg-left.col-lg-4").Each(func(i int, sel *goquery.Selection) {
+		spans := sel.Find("span")
 		if spans.Length() > 0 {
 			mapName = strings.TrimSpace(spans.Eq(0).Text())
 		}
@@ -105,7 +107,6 @@ func (s *Server) MapName() (string, error) {
 		return "", fmt.Errorf("map name not found")
 	}
 	return mapName, nil
-
 }
 
 func (s *Server) Gamemode() (string, error) {
@@ -163,7 +164,6 @@ func (s *Server) LoggedInAs() (string, error) {
 	return name, nil
 }
 
-// helper func for the Rules()
 func cleanText(text string) string {
 	re := regexp.MustCompile(`\s+`)
 	return strings.TrimSpace(re.ReplaceAllString(text, " "))
