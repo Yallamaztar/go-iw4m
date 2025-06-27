@@ -102,7 +102,11 @@ type WeaponUsage struct {
 }
 
 type PlayerResponse struct {
-	Clients []struct {
-		XUID string `json:"xuid"`
-	} `json:"clients"`
+	Clients []PlayerClientInfo `json:"clients"`
+}
+type PlayerClientInfo struct {
+	XUID     string `json:"xuid"`
+	Name     string `json:"name"`
+	ClientID string `json:"clientId"`
+	Level    int    `json:"level"`
 }

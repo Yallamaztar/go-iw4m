@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -298,19 +297,18 @@ func (s *Server) ReadChat() ([]models.Chat, error) {
 	return chat, nil
 }
 
-func (s *Server) FindPlayer(name, xuid string, count, offset, direction int) (string, error) {
-	if name == "" {
-		return "", nil
+func (s *Server) FindPlayer(name, ipAddress string, guid string, level string, game string, connected string) (string, error) {
+	if name == "" && guid == "" {
+		return "", fmt.Errorf("name or guid must be provided to search for a player")
 	}
 
-	params := url.Values{}
-	params.Set("name", name)
-	params.Set("xuid", xuid)
-	params.Set("count", strconv.Itoa(count))
-	params.Set("offset", strconv.Itoa(offset))
-	params.Set("direction", strconv.Itoa(direction))
-	r := s.Wrapper.DoRequest(fmt.Sprintf("%s/api/client/find?%s",
-		s.Wrapper.BaseURL, params.Encode()))
+	url := fmt.Sprintf("%s/Client/AdvancedFind?clientName=%s&clientIP=%s&clientGuid=%s&clientLevel=%s&gameName=%s&clientConnected=%s",
+		s.Wrapper.BaseURL, name, ipAddress, guid, level, game, connected)
+
+	fmt.Println(url)
+
+	r := s.Wrapper.DoRequest(fmt.Sprintf("%s/Client/AdvancedFind?clientName=%s&clientIP=%s&clientGuid=%s&clientLevel=%s&gameName=%s&clientConnected=%s",
+		s.Wrapper.BaseURL, name, ipAddress, guid, level, game, connected))
 
 	return r, nil
 }

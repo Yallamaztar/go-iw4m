@@ -7,6 +7,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Yallamaztar/go-iw4m/models"
+	"github.com/Yallamaztar/go-iw4m/server"
 	"github.com/Yallamaztar/go-iw4m/wrapper"
 )
 
@@ -127,3 +128,88 @@ func (p *Player) ClientInfo(clientID string) (map[string]interface{}, error) {
 	}
 	return data, nil
 }
+
+// func (p *Player) GetPlayerRankFromName(playerName string) (int, error) {
+// 	clientID, err := p.GetClientIDFromName(playerName)
+// 	if err != nil {
+// 		return -1, err
+// 	}
+
+// 	info, err := p.ClientInfo(clientID)
+// 	if err != nil {
+// 		return -1, err
+// 	}
+
+// 	level, ok := info["level"].(float64)
+// 	if !ok {
+// 		return -1, fmt.Errorf("could not parse level for player %s", playerName)
+// 	}
+
+// 	return int(level), nil
+// }
+
+func (p *Player) GetXUIDFromName(playerName string) (string, error) {
+	server := server.NewServer(p.Wrapper)
+	data, _ := server.FindPlayer(playerName, "", "", "", "", "")
+	var result models.PlayerResponse
+	if err := json.Unmarshal([]byte(data), &result); err != nil {
+		return "", err
+	}
+
+	if len(result.Clients) == 0 {
+		return "", fmt.Errorf("player %s not found", playerName)
+	}
+
+	return result.Clients[0].XUID, nil
+}
+
+func (p *Player) GetNameFromXUID(xuid string) (string, error) {
+	server := server.NewServer(p.Wrapper)
+	data, err := server.FindPlayer("", "", xuid, "", "", "")
+	if err != nil {
+		return "", fmt.Errorf("error finding player: %w", err)
+	}
+
+	if strings.TrimSpace(data) == "" {
+		return "", fmt.Errorf("empty response from FindPlayer")
+	}
+
+	var result models.PlayerResponse
+	if err := json.Unmarshal([]byte(data), &result); err != nil {
+		return "", fmt.Errorf("failed to parse JSON: %w\nRaw: %s", err, data)
+	}
+
+	if len(result.Clients) == 0 {
+		return "", fmt.Errorf("no player with xuid %s", xuid)
+	}
+
+	return result.Clients[0].Name, nil
+}
+
+func (p *Player) GetNameFromClientID(clientID string) (string, error) {
+	info, err := p.ClientInfo(clientID)
+	if err != nil {
+		return "", err
+	}
+
+	name, ok := info["name"].(string)
+	if !ok {
+		return "", fmt.Errorf("could not find name in client info")
+	}
+
+	return name, nil
+}
+
+// func (p *Player) GetClientIDFromName(playerName string) (string, error) {
+// 	data := p.Wrapper.Server(p.Wrapper).FindPlayer(playerName)
+// 	var result models.PlayerResponse
+// 	if err := json.Unmarshal([]byte(data), &result); err != nil {
+// 		return "", err
+// 	}
+
+// 	if len(result.Clients) == 0 {
+// 		return "", fmt.Errorf("player %s not found", playerName)
+// 	}
+
+// 	return result.Clients[0].ClientID, nil
+// }
