@@ -1,4 +1,4 @@
-package services
+package iw4m
 
 type CommandHelp struct {
 	Alias          string `json:"alias"`

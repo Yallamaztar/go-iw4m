@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Yallamaztar/go-iw4m/services"
+	"github.com/Yallamaztar/go-iw4m/iw4m"
 	"github.com/Yallamaztar/go-iw4m/wrapper"
 )
 
@@ -25,5 +25,5 @@ func main() {
 		os.Getenv("IW4M_HEADER"),
 	)
 
-	server := services.NewPlayer(wrapper)
+	server := iw4m.NewServer(wrapper)
 }

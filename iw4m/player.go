@@ -1,4 +1,4 @@
-package services
+package iw4m
 
 import (
 	"encoding/json"
