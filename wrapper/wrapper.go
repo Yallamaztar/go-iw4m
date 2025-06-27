@@ -25,12 +25,3 @@ func (w *IW4MWrapper) DoRequest(path string) string {
 	body, _ := io.ReadAll(r.Body)
 	return string(body)
 }
-
-func NewWrapper(baseUrl string, serverID string, cookie string) *IW4MWrapper {
-	return &IW4MWrapper{
-		BaseURL:  baseUrl,
-		ServerID: serverID,
-		Cookie:   cookie,
-		Client:   &http.Client{},
-	}
-}
